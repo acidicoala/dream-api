@@ -1,0 +1,7 @@
+{
+  "config_version": 1,
+  "port": 8888,
+  "log_level": "DEBUG",
+  "start_minimized": false,
+  "block_telemetry": false
+}

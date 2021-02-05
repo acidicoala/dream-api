@@ -1,0 +1,6 @@
+cryptography
+pywin32
+mitmproxy
+pyinstaller
+Pillow
+infi.systray
