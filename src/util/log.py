@@ -1,6 +1,5 @@
 from logging import *
 
-from util.info import version
 from util.resource import get_data_path
 from util.singleton import Singleton
 

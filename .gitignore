@@ -4,4 +4,5 @@ dist
 venv
 dev_working_dir
 .idea
+release
 *.log

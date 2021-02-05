@@ -1,2 +1,52 @@
+# 🐨 DreamAPI
 
-# TODO
+### Welcome to the DreamAPI repository.
+
+For user-friendly introduction or support, please check out
+the [official forum thread](https://cs.rin.ru/forum/memberlist.php?mode=viewprofile&u=1272949). This document and repository are meant for
+application developers.
+
+## 🚀 App architecture
+
+### Python
+
+DreamAPI is written in Python 3. The latest stable python interpreter is bundled in distributable files.
+
+### mitmproxy
+
+At the core of DreamAPI lies [mitmproxy](https://github.com/mitmproxy/mitmproxy) - an interactive, SSL/TLS-capable intercepting proxy. It is
+written in python and supports python addons, which is where DreamAPI comes in. DreamAPI initializes mitmproxy and registers itself as an
+addon. This allows DreamAPI to intercept DLC requests made by various platforms to their services and modify responses.
+
+### SSL certificate
+
+Virtually all web requests these days are encrypted with TLS. Hence, an SSL certificate needs to be installed in the Root Store, in order
+for mitmproxy to decrypt the encrypted traffic. DreamAPI tries to automatically install such a certificate when it doesn't find one
+installed.
+
+### Web proxy
+
+Since DreamAPI works as a web proxy, an operating system needs to be configured with appropriate proxy settings for DreamAPI to work
+properly. DreamAPI does that automatically on every launch and shutdown of application. This is done by writing to the
+`Computer\HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings` key of the Windows registry. It is worth mentioning
+that DreamAPI intercepts requests only from specific domains, hence the irrelevant traffic is not tampered with.
+
+### GUI
+
+For user convenience, DreamAPI provides a simple GUI built with [TkInter](https://wiki.python.org/moin/TkInter) with the help
+of [infi.systray](https://github.com/Infinidat/infi.systray) to manage the tray icon.
+
+### Packaging
+
+To facilitate application distribution, python scripts and interpreter are bundled
+using [PyInstaller](https://github.com/pyinstaller/pyinstaller). It produces both - portable and installable executables of DreamAPI.
+Installable executables are then bundled in a setup file using [Inno Setup](https://github.com/jrsoftware/issrc).
+
+The [scripts](./scripts) directory has several scripts that automate from start to end the process of packaging and bundling the
+distributable files.
+
+## 📄 License
+
+This software is licensed under
+[Zero Clause BSD](https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)) license, terms of which are available
+in [LICENSE.txt](./LICENSE.txt).

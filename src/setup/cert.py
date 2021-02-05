@@ -6,8 +6,7 @@ from cryptography.x509 import NameOID
 from mitmproxy.options import Options
 from mitmproxy.proxy import ProxyConfig
 from win32crypt import CryptStringToBinary, CertOpenStore
-from win32cryptcon import CRYPT_STRING_BASE64HEADER, CERT_STORE_PROV_SYSTEM, CERT_SYSTEM_STORE_CURRENT_USER, CERT_STORE_OPEN_EXISTING_FLAG, \
-	X509_ASN_ENCODING, CERT_STORE_ADD_REPLACE_EXISTING, CERT_CLOSE_STORE_FORCE_FLAG
+from win32cryptcon import *
 
 from util.log import Log
 
@@ -54,7 +53,7 @@ def auto_install_cert():
 				cert_byte,
 				CERT_STORE_ADD_REPLACE_EXISTING
 		)
-		Log().debug('Certificate installation was successfully completed')
+		Log().info('Certificate installation was successfully completed')
 	except BaseException as e:
 		Log().error('Certificate installation was unsuccessful')
 		Log().exception(str(e))

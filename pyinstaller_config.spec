@@ -1,10 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.building.api import *
+from PyInstaller.building.build_main import Analysis
 
-block_cipher = None
 
-# noinspection PyUnresolvedReferences
 a = Analysis(
-		['main.py'],
+		['src/main.py'],
 		pathex=['src'],
 		binaries=[],
 		datas=[("./resources", "resources")],
@@ -14,18 +14,14 @@ a = Analysis(
 		excludes=[],
 		win_no_prefer_redirects=False,
 		win_private_assemblies=False,
-		cipher=block_cipher,
 		noarchive=False
 )
 
-# noinspection PyUnresolvedReferences
 pyz = PYZ(
 		a.pure,
 		a.zipped_data,
-		cipher=block_cipher
 )
 
-# noinspection PyUnresolvedReferences
 exe = EXE(
 		pyz,
 		a.scripts,
@@ -39,9 +35,9 @@ exe = EXE(
 		upx=True,
 		console=False,
 		uac_admin=True,
+		version='version_info.py',
 )
 
-# noinspection PyUnresolvedReferences
 coll = COLLECT(
 		exe,
 		a.binaries,
@@ -51,4 +47,23 @@ coll = COLLECT(
 		upx=True,
 		upx_exclude=[],
 		name='main'
+)
+
+exe = EXE(
+		pyz,
+		a.scripts,
+		a.binaries,
+		a.zipfiles,
+		a.datas,
+		[],
+		name='DreamAPIPortable',
+		icon='./resources/icon.ico',
+		debug=False,
+		bootloader_ignore_signals=False,
+		strip=False,
+		upx=True,
+		upx_exclude=[],
+		console=False,
+		uac_admin=True,
+		version='version_info.py',
 )
