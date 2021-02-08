@@ -10,7 +10,7 @@ class DreamAPIAddon:
 	def request(flow: HTTPFlow):
 		try:
 			EpicPlatform.handle_request(flow)
-			# OriginPlatform.handle_request(flow)
+			OriginPlatform.handle_request(flow)
 		except Exception as e:
 			log.exception(str(e))
 
@@ -18,6 +18,6 @@ class DreamAPIAddon:
 	def response(flow: HTTPFlow):
 		try:
 			EpicPlatform.handle_response(flow)
-			OriginPlatform.handle_response(flow)
+			# OriginPlatform.handle_response(flow)
 		except BaseException as e:
 			log.exception(str(e))

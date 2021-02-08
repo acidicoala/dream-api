@@ -70,7 +70,6 @@ class OriginPlatform(BasePlatform):
 			tree = ElementTree.fromstring(self.flow.response.text)
 
 			for elem in tree.iter():
-				# TODO: Log DLC ids
 				if elem.tag == 'offer':
 					log.debug(f"\t{elem.attrib['offerId']}")
 				elif elem.tag == 'isOwned':

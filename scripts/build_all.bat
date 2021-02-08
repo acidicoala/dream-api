@@ -1,4 +1,4 @@
-rem This script call all other scripts in the correct order
+rem This script calls all other scripts in the correct order
 rem in order to build end-user artifacts
 
 cd /D "%~dp0"
