@@ -3,7 +3,7 @@
 ### Welcome to the DreamAPI repository.
 
 For user-friendly introduction or support, please check out
-the [official forum thread](https://cs.rin.ru/forum/memberlist.php?mode=viewprofile&u=1272949). This document and repository are meant for
+the [official forum thread](https://cs.rin.ru/forum/viewtopic.php?f=10&t=111520). This document and repository are meant for
 application developers.
 
 ## 🚀 App architecture
