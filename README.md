@@ -22,7 +22,8 @@ addon. This allows DreamAPI to intercept DLC requests made by various platforms 
 
 Virtually all web requests these days are encrypted with TLS. Hence, an SSL certificate needs to be installed in the Root Store, in order
 for mitmproxy to decrypt the encrypted traffic. DreamAPI tries to automatically install such a certificate when it doesn't find one
-installed.
+installed. You can view the installed location by hitting `Win+R`, typing `certmgr.msc`, navigating to
+`Certificates - Current User` ➔ `Trusted Root Certification Authorities` ➔ `Certificates` and finding `mitmproxy` in this list.
 
 ### Web proxy
 

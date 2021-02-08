@@ -3,5 +3,32 @@
   "port": 8888,
   "log_level": "DEBUG",
   "start_minimized": false,
-  "block_telemetry": false
+  "block_telemetry": true,
+  "use_webmaster": false,
+  "platforms": {
+    "epic": [
+      {
+        "game": "The Escapists 2",
+        "namespace": "115577f4ef1e4055aaf0da534fdfe81e",
+        "entitlements": [
+          {
+            "name": "Big Top Breakout",
+            "id": "fa7463c069a74d07aadf315df9b4e28b"
+          },
+          {
+            "name": "Dungeons and Duct Tape",
+            "id": "89867f8b0e79421698e4705a72a48b49"
+          },
+          {
+            "name": "The Glorious Regime Prison",
+            "id": "f462bd795cc04772b0c285349bd61cc6"
+          },
+          {
+            "name": "Wicked Ward",
+            "id": "72620675f0e549f39d8e28b77fb88303"
+          }
+        ]
+      }
+    ]
+  }
 }

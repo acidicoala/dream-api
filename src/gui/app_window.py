@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter.ttk import *
 from typing import Callable
 
-from setup.config import config_path, Config
+from setup.config import config_path, config
 from util.info import version
 from util.log import log_path
 from util.resource import get_bundle_path
@@ -21,7 +21,7 @@ class ApplicationWindow(Tk):
 		self.on_shutdown_callback = None
 
 	def start(self):
-		if Config().start_minimized:
+		if config.start_minimized:
 			self.withdraw()
 
 		self.title(f"DreamAPI {version}")
@@ -44,7 +44,7 @@ class ApplicationWindow(Tk):
 	def init_widgets(self):
 		Label(
 				self.frame,
-				text=f"DreamAPI is running on port {Config().port}"
+				text=f"DreamAPI is running on port {config.port}"
 		).pack(side=TOP, pady=16)
 
 		Separator(

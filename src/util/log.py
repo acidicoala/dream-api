@@ -26,3 +26,6 @@ class Log(Logger, metaclass=Singleton):
 		logger.addHandler(consoleHandler)
 
 		return logger
+
+
+log = Log()

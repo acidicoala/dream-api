@@ -4,7 +4,7 @@ from infi.systray import SysTrayIcon
 
 from gui.app_window import ApplicationWindow
 from mitm.dream_api_master import DreamAPIMaster
-from setup.config import Config
+from setup.config import config
 from setup.registry import disable_proxy, enable_proxy
 from util.resource import get_bundle_path
 
@@ -44,5 +44,5 @@ class AppTrayIcon(SysTrayIcon):
 	def start(self):
 		super().start()  # start tray
 		self.master.run_async()  # start mitmproxy
-		enable_proxy(Config().port)  # enable proxy
+		enable_proxy(config.port)  # enable proxy
 		self.window.start()  # start window

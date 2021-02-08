@@ -49,6 +49,7 @@ coll = COLLECT(
 		name='main'
 )
 
+# Portable executable
 exe = EXE(
 		pyz,
 		a.scripts,

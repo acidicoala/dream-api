@@ -1,8 +1,7 @@
 from typing import Union
-
 from winreg import *
 
-from util.log import Log
+from util.log import log
 
 internet_settings_path = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings'
 
@@ -34,10 +33,10 @@ def enable_proxy(port: int):
 	__set_reg('ProxyOverride', '<local>')
 	__set_reg('ProxyServer', f'127.0.0.1:{port}')
 
-	Log().info(f'Internet proxy enabled on 127.0.0.1:{port}')
+	log.info(f'Internet proxy enabled on 127.0.0.1:{port}')
 
 
 def disable_proxy():
 	__set_reg('ProxyEnable', 0)
 
-	Log().info(f'Internet proxy disabled')
+	log.info(f'Internet proxy disabled')

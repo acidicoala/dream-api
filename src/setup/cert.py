@@ -8,7 +8,7 @@ from mitmproxy.proxy import ProxyConfig
 from win32crypt import CryptStringToBinary, CertOpenStore
 from win32cryptcon import *
 
-from util.log import Log
+from util.log import log
 
 
 def is_cert_installed():
@@ -18,14 +18,14 @@ def is_cert_installed():
 
 		if len(attrs) > 0:
 			if attrs[0].value == 'mitmproxy':
-				Log().info('Certificate is installed')
+				log.info('Certificate is installed')
 				return True
 
 	return False
 
 
 def auto_install_cert():
-	Log().warning('Certificate is not installed. Installing...')
+	log.warning('Certificate is not installed. Installing...')
 
 	# Create dummy config to generate certificate
 	ProxyConfig(Options())
@@ -53,9 +53,9 @@ def auto_install_cert():
 				cert_byte,
 				CERT_STORE_ADD_REPLACE_EXISTING
 		)
-		Log().info('Certificate installation was successfully completed')
+		log.info('Certificate installation was successfully completed')
 	except BaseException as e:
-		Log().error('Certificate installation was unsuccessful')
-		Log().exception(str(e))
+		log.error('Certificate installation was unsuccessful')
+		log.exception(str(e))
 	finally:
 		store.CertCloseStore(CERT_CLOSE_STORE_FORCE_FLAG)
