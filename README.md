@@ -2,15 +2,15 @@
 
 ### Welcome to the DreamAPI repository.
 
-For user-friendly introduction or support, please check out
-the [official forum thread](https://cs.rin.ru/forum/viewtopic.php?f=10&t=111520). This document and repository are meant for
-application developers.
+For user-friendly introduction or support, please check out the [official forum thread](https://cs.rin.ru/forum/viewtopic.php?f=10&t=111520)
+. This document and repository are meant for application developers.
 
 ## 🚀 App architecture
 
 ### Python
 
-DreamAPI is written in Python 3. The latest stable python interpreter is bundled in distributable files.
+DreamAPI is written in Python 3. The latest stable python interpreter is bundled in distributable files. To run the project locally, you
+would need Python 3.9.0+
 
 ### mitmproxy
 
@@ -45,6 +45,8 @@ Installable executables are then bundled in a setup file using [Inno Setup](http
 
 The [scripts](./scripts) directory has several scripts that automate from start to end the process of packaging and bundling the
 distributable files.
+
+The scripts assume that there is a virtual environment located in the `venv` directory under the root of the project.
 
 ## 📄 License
 

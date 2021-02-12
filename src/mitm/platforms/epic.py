@@ -34,6 +34,7 @@ class EpicPlatform(BasePlatform):
 			url = urlparse(self.flow.request.url)
 			params = parse_qs(url.query)['nsCatalogItemId']
 
+			# Each nsCatalogItemId is formatted as '{namespace}:{item_id}'
 			[log.debug(f'\t{param}') for param in params]
 
 			result = [{
@@ -71,6 +72,8 @@ class EpicPlatform(BasePlatform):
 
 				# Map the list of objects to the list of string
 				entitlementNames = [entitlement['id'] for entitlement in entitlements]
+
+			[log.debug(f'\t{sandbox_id}:{entitlement}') for entitlement in entitlementNames]
 
 			result = [{
 				'id': entitlementName,  # Not true, but irrelevant

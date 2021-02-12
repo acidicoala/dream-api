@@ -28,6 +28,11 @@ def __get_reg(name):
 		return None
 
 
+orig_proxy_enable = __get_reg('ProxyEnable')
+orig_proxy_override = __get_reg('ProxyOverride')
+orig_proxy_server = __get_reg('ProxyServer')
+
+
 def enable_proxy(port: int):
 	__set_reg('ProxyEnable', 1)
 	__set_reg('ProxyOverride', '<local>')
@@ -37,6 +42,8 @@ def enable_proxy(port: int):
 
 
 def disable_proxy():
-	__set_reg('ProxyEnable', 0)
+	__set_reg('ProxyEnable', orig_proxy_enable)
+	__set_reg('ProxyOverride', orig_proxy_override)
+	__set_reg('ProxyServer', orig_proxy_server)
 
 	log.info(f'Internet proxy disabled')

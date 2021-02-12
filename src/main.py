@@ -6,6 +6,7 @@ from gui.app_window import ApplicationWindow
 from gui.tray_icon import AppTrayIcon
 from mitm.dream_api_master import DreamAPIMaster
 from setup.cert import *
+from setup.config import config
 from util.info import version
 from util.log import log
 
@@ -15,7 +16,7 @@ if __name__ == '__main__':
 
 		# Certificates
 		if not is_cert_installed():
-			auto_install_cert()
+			install_cert()
 
 		# mitmproxy master
 		master = DreamAPIMaster()
@@ -27,9 +28,12 @@ if __name__ == '__main__':
 		tray = AppTrayIcon(master, window)
 		tray.start()
 
+		if config.delete_cert_on_exit:
+			delete_cert()
+
 		log.info('Successful exit')
 	except BaseException as e:
-		title = e.message if hasattr(e, 'message') else e.strerror if hasattr(e, 'strerror') else 'Error'
+		title = get_ex_msg(e)
 		log.exception(str(e))
 
 		MessageBox = ctypes.windll.user32.MessageBoxW

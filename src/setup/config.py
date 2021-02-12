@@ -32,6 +32,7 @@ class Config(metaclass=Singleton):
 	start_minimized: bool
 	block_telemetry: bool
 	use_webmaster: bool
+	delete_cert_on_exit: bool
 	platforms: Platforms
 
 	def __init__(self):
@@ -47,7 +48,16 @@ class Config(metaclass=Singleton):
 		self.config_version: int = default_version
 
 		# Assign json properties to the class instance
-		self.__keys = ['port', 'log_level', 'start_minimized', 'block_telemetry', 'use_webmaster', 'platforms']
+		self.__keys = [
+			'port',
+			'log_level',
+			'start_minimized',
+			'block_telemetry',
+			'use_webmaster',
+			'delete_cert_on_exit',
+			'platforms'
+		]
+
 		for key in self.__keys:
 			# Try saved value first, otherwise use default
 			try:
