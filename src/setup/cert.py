@@ -2,6 +2,8 @@ import os
 import subprocess
 from pathlib import Path
 
+from mitmproxy.options import Options
+from mitmproxy.proxy import ProxyConfig
 from win32api import FormatMessage
 
 from util.log import log
@@ -17,6 +19,8 @@ def is_cert_installed():
 def install_cert():
 	log.warning('Installing mitmproxy certificate...')
 
+	# Init dummy config to generate the certificate
+	ProxyConfig(Options())
 	crtPath = Path.home().joinpath('.mitmproxy', 'mitmproxy-ca-cert.cer')
 
 	if error_code := subprocess.call(f'certutil -addstore -user Root {crtPath}', shell=True):
@@ -29,7 +33,7 @@ def install_cert():
 
 def delete_cert():
 	log.warning('Deleting mitmproxy certificate...')
-	if (error_code := subprocess.call('certutil -delstore -user Root mitmproxy', shell=True)) == 0:
-		log.info('Certificate was successfully deleted')
-	else:
+	if error_code := subprocess.call('certutil -delstore -user Root mitmproxy', shell=True):
 		log.error(f'Certificate could not be deleted: {str(FormatMessage(error_code)).strip()}')
+	else:
+		log.info('Certificate was successfully deleted')

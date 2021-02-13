@@ -9,6 +9,7 @@ from setup.cert import *
 from setup.config import config
 from util.info import version
 from util.log import log
+from util.util import get_ex_msg
 
 if __name__ == '__main__':
 	try:
