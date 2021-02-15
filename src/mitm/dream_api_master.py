@@ -6,7 +6,8 @@ from mitmproxy.options import Options
 from mitmproxy.proxy import ProxyServer, ProxyConfig
 from mitmproxy.tools.web.master import WebMaster
 
-from mitm.dream_api_addon import DreamAPIAddon
+from mitm.addons.epic import EpicAddon
+from mitm.addons.origin import OriginAddon
 from setup.config import config
 from util.log import log
 
@@ -15,20 +16,20 @@ class DreamAPIMaster(WebMaster if config.use_webmaster else Master):
 	def __init__(self):
 		options = Options(
 				listen_port=config.port,
-				# Allow only epic & origin hosts for now
-				ignore_hosts=[
-					r'^(?![0-9.]+:)'  # All ip addresses
-					r'(?!api\.epicgames\.dev:)'
-					r'(?!api\d*\.origin\.com:)'
-					r'(?!ecommerceintegration.+\.epicgames\.com:)'
-				]
+				ignore_hosts=[''.join([
+					r'^(?![0-9.]+:)',  # https://docs.mitmproxy.org/stable/howto-ignoredomains/
+					EpicAddon.hosts,  # Allow epic hosts
+					OriginAddon.hosts,  # Allow origin hosts
+				])]
 		)
-		options.add_option("body_size_limit", int, 0, "")
+		options.add_option("body_size_limit", int, 0, "")  # Fix for weird bug that crashes mitmproxy
 
 		super().__init__(options)
 
 		self.server = ProxyServer(ProxyConfig(options))
-		self.addons.add(DreamAPIAddon())
+		self.addons.add(EpicAddon())
+		self.addons.add(OriginAddon())
+
 		log.info(f'Successfully initialized mitmproxy on port {config.port}')
 
 	def loop_in_thread(self):

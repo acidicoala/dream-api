@@ -3,3 +3,6 @@ mitmproxy
 pyinstaller
 Pillow
 infi.systray
+requests
+Pymem
+pefile
