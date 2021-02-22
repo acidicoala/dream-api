@@ -22,9 +22,10 @@ def install_cert():
 	# Init dummy config to generate the certificate
 	ProxyConfig(Options())
 	crtPath = Path.home().joinpath('.mitmproxy', 'mitmproxy-ca-cert.cer')
+	log.debug(f'certificate path: "{crtPath}"')
 
-	if error_code := subprocess.call(f'certutil -addstore -user Root {crtPath}', shell=True):
-		log.error(f'Certificate could not be installed: {str(FormatMessage(error_code)).strip()}')
+	if error_code := subprocess.call(f'certutil -addstore -user Root "{crtPath}"', shell=True):
+		log.error(f'Certificate could not be installed: {hex(error_code)} - {str(FormatMessage(error_code)).strip()}')
 		# noinspection PyProtectedMember,PyUnresolvedReferences
 		os._exit(1)
 	else:
@@ -34,6 +35,6 @@ def install_cert():
 def delete_cert():
 	log.warning('Deleting mitmproxy certificate...')
 	if error_code := subprocess.call('certutil -delstore -user Root mitmproxy', shell=True):
-		log.error(f'Certificate could not be deleted: {str(FormatMessage(error_code)).strip()}')
+		log.error(f'Certificate could not be deleted: {hex(error_code)} - {str(FormatMessage(error_code)).strip()}')
 	else:
 		log.info('Certificate was successfully deleted')

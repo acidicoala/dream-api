@@ -1,42 +1,24 @@
 import json
-from typing import List, Dict, TypedDict
+from os.path import isfile
 from xml.etree import ElementTree
 
 import requests
-from mitmproxy.http import HTTPFlow, HTTPResponse
+from mitmproxy.http import HTTPResponse
 from pefile import PE
 from pymem import Pymem
 from pymem.exception import ProcessNotFound
 
-from mitm.addons.base import BaseAddon, log_exceptions
+from mitm.addons.base import *
 from setup.config import config
 from util.log import log
-
-
-class OriginEntitlement(TypedDict):
-	productId: str
-	entitlementTag: str
-	groupName: str
-	entitlementId: int
-	entitlementType: str
-	lastModifiedDate: str
-	entitlementSource: str
-	grantDate: str
-	suppressedBy: List
-	version: int
-	isConsumable: bool
-	productCatalog: str
-	suppressedOffers: List
-	originPermissions: str
-	useCount: int
-	projectId: str
-	status: str
+from util.resource import get_data_path
 
 
 class OriginAddon(BaseAddon):
 	last_origin_pid = 0
-	injected_entitlements: List[OriginEntitlement] = []
+	injected_entitlements = []
 	api_host = r'api\d*\.origin\.com'
+	entitlements_path = get_data_path('origin-entitlements.json')
 
 	hosts = BaseAddon.get_hosts([
 		api_host
@@ -44,8 +26,9 @@ class OriginAddon(BaseAddon):
 
 	@log_exceptions
 	def __init__(self):
-		self.fetch_entitlements()
 		self.patch_origin_client()
+		self.fetch_entitlements_if_necessary()
+		self.read_entitlements_from_cache()
 
 	@staticmethod
 	@log_exceptions
@@ -55,7 +38,7 @@ class OriginAddon(BaseAddon):
 	@log_exceptions
 	def response(self, flow: HTTPFlow):
 		self.intercept_entitlements(flow)
-		OriginAddon.intercept_products(flow)
+		self.intercept_products(flow)
 
 	def intercept_entitlements(self, flow: HTTPFlow):
 		if BaseAddon.host_and_path_match(
@@ -69,14 +52,18 @@ class OriginAddon(BaseAddon):
 
 			# Get legit user entitlements
 			try:
-				entitlements: List[OriginEntitlement] = json.loads(flow.response.text)['entitlements']
+				entitlements: List = json.loads(flow.response.text)['entitlements']
 			except KeyError:
 				entitlements = []
 
 			# Inject our entitlements
 			entitlements.extend(self.injected_entitlements)
 
-			[log.debug(f"\t{e['entitlementTag']}") for e in entitlements]
+			for e in entitlements:
+				try:
+					log.debug(f"\t{e['___name']}")
+				except KeyError:
+					log.debug(f"\t{e['entitlementTag']}")
 
 			# Modify response
 			flow.response.status_code = 200
@@ -86,11 +73,10 @@ class OriginAddon(BaseAddon):
 			flow.response.headers.add('X-Origin-CurrentTime', '1609452000')
 			flow.response.headers.add('X-Origin-Signature', 'nonce')
 
-	@staticmethod
-	def intercept_products(flow: HTTPFlow):
+	def intercept_products(self, flow: HTTPFlow):
 		if BaseAddon.host_and_path_match(
 				flow,
-				host=OriginAddon.api_host,
+				host=self.api_host,
 				path=r"^/ecommerce2/products$"
 		):  # Just for store page, no effect in game
 			log.info('Intercepted a Products request from Origin')
@@ -114,16 +100,48 @@ class OriginAddon(BaseAddon):
 			flow.response = HTTPResponse.make(500, 'No more spying')
 			log.debug('Blocked telemetry request from Origin')
 
-	def fetch_entitlements(self):
-		log.debug('Fetching origin entitlements...')
+	def fetch_entitlements_if_necessary(self):
+		log.debug('Fetching origin entitlements')
 
-		url = 'https://raw.githubusercontent.com/acidicoala/origin-entitlements/master/sims4.json'
-		response = requests.get(url)
-		self.injected_entitlements = response.json()
+		# Get the etag
+		etag_path = get_data_path('origin-entitlements.etag')
+		etag = ''
+		if isfile(etag_path):
+			with open(etag_path, mode='r') as file:
+				etag = file.read()
 
-		log.debug('Origin entitlements were successfully fetched')
+		# Fetch entitlements if etag does not match
+		url = 'https://raw.githubusercontent.com/acidicoala/origin-entitlements/master/entitlements.json'
+		response = requests.get(url, headers={'If-None-Match': etag})
+
+		if response.status_code == 304:
+			log.debug(f'Cached Origin entitlements have not changed')
+			return
+
+		if response.status_code != 200:
+			log.error(f'Error while fetching entitlements: {response.status_code} - {response.text}')
+			return
+
+		# Cache entitlements
+		with open(self.entitlements_path, 'w') as f:
+			f.write(response.text)
+
+		# Cache etag
+		with open(etag_path, 'w') as f:
+			f.write(response.headers['etag'])
+
+		log.info('Origin entitlements were successfully fetched and cached')
+
+	def read_entitlements_from_cache(self):
+		log.debug('Reading origin entitlements from cache')
+
+		with open(self.entitlements_path, mode='r') as file:
+			self.injected_entitlements = json.loads(file.read())
+
+		log.info('Origin entitlements were successfully read from file')
 
 	# Credit to anadius for the idea
+	@synchronized_method
 	def patch_origin_client(self):
 		PROCESS_NAME = 'Origin.exe'
 		DLL_NAME = 'libeay32.dll'
@@ -132,19 +150,19 @@ class OriginAddon(BaseAddon):
 		try:
 			origin_process = Pymem(PROCESS_NAME)
 		except ProcessNotFound:
-			log.warning('Origin process not found. Patching aborted.')
+			log.warning('Origin process not found. Patching aborted')
 			return
 
 		if origin_process.process_id == self.last_origin_pid:
-			# Origin is already patched.
+			log.debug('Origin client is already patched')
 			return
 
-		log.info('Patching Origin client...')
+		log.info('Patching Origin client')
 
 		try:
 			libeay32_module = next(m for m in origin_process.list_modules() if m.name.lower() == DLL_NAME)
 		except StopIteration:
-			log.error(f'{DLL_NAME} is not loaded. Patching aborted.')
+			log.error(f'{DLL_NAME} is not loaded. Patching aborted')
 			return
 
 		# The rest should complete without issues in most cases.
@@ -170,7 +188,7 @@ class OriginAddon(BaseAddon):
 		read_instructions = origin_process.read_bytes(verify_func_addr, len(patch_instructions))
 
 		if read_instructions != patch_instructions:
-			log.error('Failed to patch the instruction memory. Patching failed.')
+			log.error('Failed to patch the instruction memory')
 			return
 
 		# At this point we know that patching was successful
