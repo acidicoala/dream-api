@@ -106,7 +106,7 @@ class OriginAddon(BaseAddon):
 		# Get the etag
 		etag_path = get_data_path('origin-entitlements.etag')
 		etag = ''
-		if isfile(etag_path):
+		if isfile(self.entitlements_path) and isfile(etag_path):
 			with open(etag_path, mode='r') as file:
 				etag = file.read()
 
