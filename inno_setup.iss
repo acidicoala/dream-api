@@ -20,12 +20,12 @@ AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
 Compression=lzma
+; Allow selection of installation with elevation or not.
+PrivilegesRequiredOverridesAllowed=commandline dialog
 DefaultDirName={commonpf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
 LicenseFile=LICENSE.txt
-; Remove the following line to run in administrative install mode (install for all users.)
-PrivilegesRequired=lowest
 OutputBaseFilename=DreamAPISetup
 OutputDir=dist
 SolidCompression=yes
