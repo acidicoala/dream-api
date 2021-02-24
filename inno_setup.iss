@@ -11,7 +11,8 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{FF9B6947-9E8A-4075-83F6-F231A6F3DB07}
+
+AppId={{EF99E938-9948-4BA8-93ED-F2D54A72A445}
 AppName={#AppName}
 AppVersion={#AppVersion}
 ;AppVerName={#AppName} {#AppVersion}
@@ -19,16 +20,18 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
-Compression=lzma
-DefaultDirName={commonpf}\{#AppName}
+DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
 LicenseFile=LICENSE.txt
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
-OutputBaseFilename=DreamAPISetup
+PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=dist
+OutputBaseFilename=DreamAPI
+Compression=lzma
 SolidCompression=yes
+SetupIconFile=dist\main\resources\icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 VersionInfoCompany=acidicoala
 VersionInfoProductName="DreamAPI Setup"
@@ -40,9 +43,11 @@ WizardStyle=modern
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
+
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
+
 Source: "dist\main\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\main\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
