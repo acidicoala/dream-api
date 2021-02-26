@@ -55,7 +55,7 @@ The scripts assume that there is a virtual environment located in the `venv` dir
 There are many ways how you can run a python project from the source. Here is the flow that works for me:
 
 1. Install [pyenv].
-2. Run the following commands in the windows command prompt (not powershell):
+2. Run the following commands from the project root in the windows command prompt (not powershell):
 
 ```Batch
 pyenv install 3.9.1
