@@ -9,7 +9,7 @@ def get_bundle_path(name: str):
 		# noinspection PyProtectedMember
 		return Path(sys._MEIPASS) / 'resources' / name
 	else:
-		return Path().absolute().parent / 'resources' / name
+		return Path(sys.argv[0]).parent.parent / 'resources' / name
 
 
 def get_data_path(name: str) -> Path:
@@ -21,4 +21,4 @@ def get_data_path(name: str) -> Path:
 	if is_production:
 		return Path(sys.executable).parent / name
 	else:
-		return Path().absolute().parent / 'dev_working_dir' / name
+		return Path(sys.argv[0]).parent.parent / 'dev_working_dir' / name

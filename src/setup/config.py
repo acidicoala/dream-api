@@ -75,7 +75,7 @@ class Config(metaclass=Singleton):
 
 	@staticmethod
 	def __get_config_json() -> dict:
-		if is_production and not config_path.exists():
+		if not config_path.exists():
 			orig_config = get_bundle_path('DreamAPI.json')
 			copyfile(orig_config, config_path)
 
