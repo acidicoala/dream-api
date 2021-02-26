@@ -50,6 +50,21 @@ distributable files.
 
 The scripts assume that there is a virtual environment located in the `venv` directory under the root of the project.
 
+### Running from source
+
+There are many ways how you can run a python project from the source. Here is the flow that works for me:
+
+1. Install [pyenv].
+2. Run the following commands in the windows command prompt (not powershell):
+
+```Batch
+pyenv install 3.9.1
+pyenv shell 3.9.1
+pyenv exec python -m venv ./venv
+scripts\install_python_requirements.bat
+python src\main.py
+```
+
 ## 📄 License
 
 This software is licensed under
@@ -72,3 +87,5 @@ This software is licensed under
 [Zero Clause BSD]: https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 
 [LICENSE.txt]: ./LICENSE.txt
+
+[pyenv]: https://github.com/pyenv/pyenv
