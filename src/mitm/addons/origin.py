@@ -112,7 +112,12 @@ class OriginAddon(BaseAddon):
 
 		# Fetch entitlements if etag does not match
 		url = 'https://raw.githubusercontent.com/acidicoala/origin-entitlements/master/entitlements.json'
-		response = requests.get(url, headers={'If-None-Match': etag})
+
+		try:
+			response = requests.get(url, headers={'If-None-Match': etag}, timeout=10)
+		except Exception as e:
+			log.error(f"Failed to fetch origin entitlements. {str(e)}")
+			return
 
 		if response.status_code == 304:
 			log.debug(f'Cached Origin entitlements have not changed')
