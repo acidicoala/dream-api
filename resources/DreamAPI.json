@@ -6,6 +6,7 @@
   "block_telemetry": true,
   "use_webmaster": false,
   "delete_cert_on_exit": false,
+  "languages": "english",
   "platforms": {
     "epic": [
       {
