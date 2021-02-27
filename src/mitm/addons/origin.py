@@ -101,7 +101,7 @@ class OriginAddon(BaseAddon):
 			log.debug('Blocked telemetry request from Origin')
 
 	def fetch_entitlements_if_necessary(self):
-		log.debug('Fetching origin entitlements')
+		log.debug('Fetching Origin entitlements')
 
 		# Get the etag
 		etag_path = get_data_path('origin-entitlements.etag')

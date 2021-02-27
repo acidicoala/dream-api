@@ -9,8 +9,8 @@ are meant for application developers.
 
 ### Python
 
-DreamAPI is written in Python 3. The latest stable python interpreter is bundled in distributable files. To run the
-project locally, you would need Python 3.9.0+
+DreamAPI is written in Python 3. The python interpreter is bundled in distributable files. To run the
+project locally, you would need at Python 3.8+
 
 ### mitmproxy
 
@@ -58,8 +58,8 @@ There are many ways how you can run a python project from the source. Here is th
 2. Run the following commands from the project root in the windows command prompt (not powershell):
 
 ```Batch
-pyenv install 3.9.1
-pyenv shell 3.9.1
+pyenv install 3.8.7
+pyenv shell 3.8.7
 pyenv exec python -m venv ./venv
 scripts\install_python_requirements.bat
 python src\main.py
