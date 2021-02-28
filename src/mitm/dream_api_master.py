@@ -9,6 +9,7 @@ from mitmproxy.tools.web.master import WebMaster
 from mitm.addons.epic import EpicAddon
 from mitm.addons.origin import OriginAddon
 from setup.config import config
+from setup.registry import disable_proxy
 from util.log import log
 
 
@@ -25,6 +26,9 @@ class DreamAPIMaster(WebMaster if config.use_webmaster else Master):
 		options.add_option("body_size_limit", int, 0, "")  # Fix for weird bug that crashes mitmproxy
 
 		super().__init__(options)
+
+		# Disable proxy that was possibly left over from last run
+		disable_proxy()
 
 		self.server = ProxyServer(ProxyConfig(options))
 		self.addons.add(EpicAddon())

@@ -21,32 +21,45 @@ class ApplicationWindow(Tk):
 		self.on_shutdown_callback = None
 
 	def start(self):
-		if config.start_minimized:
-			self.withdraw()
+		self.withdraw()
 
 		self.title(f"DreamAPI {version}")
 		self.iconbitmap(str(get_bundle_path('icon.ico')))
 		self.minsize(300, 0)
-		self.resizable(
-				width=False,
-				height=False
-		)
+		self.resizable(width=False, height=False)
 		self.frame = Frame(self)
 		self.init_widgets()
 		self.frame.pack(fill=BOTH)
-		self.update_idletasks()
-		w = self.winfo_screenwidth()
-		h = self.winfo_screenheight()
-		size = tuple(int(_) for _ in self.geometry().split('+')[0].split('x'))
-		x = w/2 - size[0]/2
-		y = h/2 - size[1]/2
-		self.geometry("%dx%d+%d+%d" % (size + (x, y)))
+
+		self.center_window()
+
+		if not config.start_minimized:
+			self.show_window()
 
 		self.mainloop()
+
+	def center_window(self):
+		self.update_idletasks() # Why?
+
+		# Get screen size
+		w = self.winfo_screenwidth()
+		h = self.winfo_screenheight()
+
+		# Get windows size and calculate offset
+		size_x, size_y = self.geometry().split('+')[0].split('x')
+		x = int(w / 2 - int(size_x) / 2)
+		y = int(h / 2 - int(size_y) / 2)
+
+		# Finally, apply it
+		self.geometry(f'{size_x}x{size_y}+{x}+{y}')
+		#self.geometry("%dx%d+%d+%d" % (size  (x, y)))
 
 	def hide_window(self):
 		self.update()
 		self.withdraw()
+
+	def show_window(self):
+		self.deiconify()
 
 	def init_widgets(self):
 		Label(

@@ -141,9 +141,9 @@ class OriginAddon(BaseAddon):
 		log.debug('Reading origin entitlements from cache')
 
 		with open(self.entitlements_path, mode='r') as file:
-			self.injected_entitlements = json.loads(file.read())
+			self.injected_entitlements: list = json.loads(file.read())
 
-		log.info('Origin entitlements were successfully read from file')
+		log.info(f'{len(self.injected_entitlements)} Origin entitlements were successfully read from cache')
 
 	# Credit to anadius for the idea
 	@synchronized_method
