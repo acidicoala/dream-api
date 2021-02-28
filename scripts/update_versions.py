@@ -28,7 +28,7 @@ def process_file(filePath: str, patterns: List[Tuple[str, str]]):
 if __name__ == '__main__':
 	VER_MAJOR = 1
 	VER_MINOR = 1
-	VER_PATCH = 3
+	VER_PATCH = 4
 	VER_REVISION = 0
 
 	process_file('version_info.py', [
