@@ -52,7 +52,6 @@ class ApplicationWindow(Tk):
 
 		# Finally, apply it
 		self.geometry(f'{size_x}x{size_y}+{x}+{y}')
-		#self.geometry("%dx%d+%d+%d" % (size  (x, y)))
 
 	def hide_window(self):
 		self.update()

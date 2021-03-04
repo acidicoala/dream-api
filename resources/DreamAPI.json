@@ -1,35 +1,50 @@
 {
-  "config_version": 2,
-  "port": 8888,
-  "log_level": "DEBUG",
-  "start_minimized": false,
-  "block_telemetry": true,
-  "use_webmaster": false,
-  "delete_cert_on_exit": false,
-  "platforms": {
-    "epic": [
-      {
-        "game": "The Escapists 2",
-        "namespace": "115577f4ef1e4055aaf0da534fdfe81e",
-        "entitlements": [
-          {
-            "name": "Big Top Breakout",
-            "id": "fa7463c069a74d07aadf315df9b4e28b"
-          },
-          {
-            "name": "Dungeons and Duct Tape",
-            "id": "89867f8b0e79421698e4705a72a48b49"
-          },
-          {
-            "name": "The Glorious Regime Prison",
-            "id": "f462bd795cc04772b0c285349bd61cc6"
-          },
-          {
-            "name": "Wicked Ward",
-            "id": "72620675f0e549f39d8e28b77fb88303"
-          }
-        ]
-      }
-    ]
-  }
+	"config_version": 3,
+	"port": 8888,
+	"log_level": "DEBUG",
+	"start_minimized": false,
+	"block_telemetry": true,
+	"use_webmaster": false,
+	"delete_cert_on_exit": false,
+	"platforms": {
+		"epic": [
+			{
+				"game": "The Escapists 2",
+				"namespace": "115577f4ef1e4055aaf0da534fdfe81e",
+				"entitlements": [
+					{
+						"name": "Big Top Breakout",
+						"id": "fa7463c069a74d07aadf315df9b4e28b"
+					},
+					{
+						"name": "Dungeons and Duct Tape",
+						"id": "89867f8b0e79421698e4705a72a48b49"
+					},
+					{
+						"name": "The Glorious Regime Prison",
+						"id": "f462bd795cc04772b0c285349bd61cc6"
+					},
+					{
+						"name": "Wicked Ward",
+						"id": "72620675f0e549f39d8e28b77fb88303"
+					}
+				]
+			},
+			{
+				"game": "Back 4 Blood",
+				"namespace": "57dfd95548214a138218e56cd9e5b9d8",
+				"blacklist": [
+					{
+						"name": "Back 4 Blood: Deluxe Edition",
+						"id": "071f48aa073e49e7b67695a7d2558556"
+					}
+				]
+			}
+		],
+		"origin": {
+			"blacklist": [
+
+			]
+		}
+	}
 }

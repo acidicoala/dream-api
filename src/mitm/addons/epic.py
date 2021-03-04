@@ -6,8 +6,12 @@ from mitmproxy.http import HTTPFlow, HTTPResponse
 
 from mitm.addons.base import BaseAddon
 from mitm.addons.base import log_exceptions
-from setup.config import config
+from setup.config import config, EpicGame
 from util.log import log
+
+
+def get_epic_game(namespace: str) -> EpicGame:
+	return next((game for game in config.platforms['epic'] if game['namespace'] == namespace), None)
 
 
 class EpicAddon(BaseAddon):
@@ -44,11 +48,18 @@ class EpicAddon(BaseAddon):
 			# Each nsCatalogItemId is formatted as '{namespace}:{item_id}'
 			[log.debug(f'\t{param}') for param in params]
 
-			result = [{
-				'namespace': param.split(':')[0],
-				'itemId': param.split(':')[1],
-				'owned': True
-			} for param in params]
+			def process_game(param: str):
+				namespace, itemID = param.split(':')
+				game = get_epic_game(namespace)
+				blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None else []
+				owned = True if game is None else itemID not in blacklist
+				return {
+					'namespace': namespace,
+					'itemId': itemID,
+					'owned': owned,
+				}
+
+			result = [process_game(param) for param in params]
 
 			EpicAddon.modify_response(flow, result)
 
@@ -64,6 +75,9 @@ class EpicAddon(BaseAddon):
 			url = urlparse(flow.request.url)
 			sandbox_id = parse_qs(url.query)['sandboxId'][0]
 
+			# Get the game in the config with namespace that matches the sandboxId
+			game = get_epic_game(sandbox_id)
+
 			try:
 				# Get the entitlements from request params
 				entitlementNames = parse_qs(url.query)['entitlementName']
@@ -73,9 +87,6 @@ class EpicAddon(BaseAddon):
 						'responding with entitlements defined in the config file'
 				)
 
-				# Get the game in the config with namespace that matches the sandboxId
-				game = next((game for game in config.platforms['epic'] if game['namespace'] == sandbox_id), None)
-
 				# Get the game's entitlements
 				entitlements = game['entitlements'] if game is not None else []
 
@@ -83,6 +94,10 @@ class EpicAddon(BaseAddon):
 				entitlementNames = [entitlement['id'] for entitlement in entitlements]
 
 			[log.debug(f'\t{sandbox_id}:{entitlement}') for entitlement in entitlementNames]
+
+			# Filter out blacklisted entitlements
+			blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None else []
+			entitlementNames = [e for e in entitlementNames if e not in blacklist]
 
 			result = [{
 				'id': entitlementName,  # Not true, but irrelevant

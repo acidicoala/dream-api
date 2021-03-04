@@ -10,7 +10,7 @@ from util.singleton import Singleton
 config_path = get_data_path('DreamAPI.json')
 
 
-class EpicEntitlement(TypedDict):
+class Entitlement(TypedDict):
 	name: str
 	id: str
 
@@ -18,11 +18,17 @@ class EpicEntitlement(TypedDict):
 class EpicGame(TypedDict):
 	game: str
 	namespace: str
-	entitlements: List[EpicEntitlement]
+	entitlements: List[Entitlement]
+	blacklist: List[Entitlement]
+
+
+class OriginConfig(TypedDict):
+	blacklist: List[Entitlement]
 
 
 class Platforms(TypedDict):
 	epic: List[EpicGame]
+	origin: OriginConfig
 
 
 class Config(metaclass=Singleton):

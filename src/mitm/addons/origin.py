@@ -59,6 +59,10 @@ class OriginAddon(BaseAddon):
 			# Inject our entitlements
 			entitlements.extend(self.injected_entitlements)
 
+			# Filter out blacklisted DLCs
+			blacklist = [game['id'] for game in config.platforms['origin']['blacklist']]
+			entitlements = [e for e in entitlements if e['entitlementTag'] not in blacklist]
+
 			for e in entitlements:
 				try:
 					log.debug(f"\t{e['___name']}")
