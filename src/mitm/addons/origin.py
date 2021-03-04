@@ -115,7 +115,7 @@ class OriginAddon(BaseAddon):
 				etag = file.read()
 
 		# Fetch entitlements if etag does not match
-		url = 'https://raw.githubusercontent.com/acidicoala/origin-entitlements/master/entitlements.json'
+		url = 'https://raw.githubusercontent.com/acidicoala/public-entitlements/main/origin/v1/entitlements.json'
 
 		try:
 			response = requests.get(url, headers={'If-None-Match': etag}, timeout=10)
@@ -131,9 +131,33 @@ class OriginAddon(BaseAddon):
 			log.error(f'Error while fetching entitlements: {response.status_code} - {response.text}')
 			return
 
+		try:
+			index = 1000000
+			entitlements: List[dict] = json.loads(response.text)
+			for entitlement in entitlements:
+				entitlement.update({
+					"entitlementId": index,
+					"lastModifiedDate": "2020-01-01T00:00Z",
+					"entitlementSource": "ORIGIN-OIG",
+					"grantDate": "2020-01-01T00:00:00Z",
+					"suppressedBy": [],
+					"version": 0,
+					"isConsumable": False,
+					"productCatalog": "OFB",
+					"suppressedOffers": [],
+					"originPermissions": "0",
+					"useCount": 0,
+					"projectId": "123456",
+					"status": "ACTIVE"
+				})
+				index += 1
+		except ValueError as e:
+			log.error(f"Failed to decode entitlements from json. {str(e)}")
+			return
+
 		# Cache entitlements
 		with open(self.entitlements_path, 'w') as f:
-			f.write(response.text)
+			f.write(json.dumps(entitlements, indent=4, ensure_ascii=False))
 
 		# Cache etag
 		with open(etag_path, 'w') as f:
