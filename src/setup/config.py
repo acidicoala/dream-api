@@ -95,7 +95,10 @@ class Config(metaclass=Singleton):
 			return json.load(file)
 
 	def __save_config_file(self, version: int):
-		json_dict = {'config_version': version} | {key: self.__getattribute__(key) for key in self.__keys}
+		json_dict = {
+			**{'config_version': version},
+			**{key: self.__getattribute__(key) for key in self.__keys}
+		}
 
 		with open(config_path, 'w') as writer:
 			writer.write(json.dumps(json_dict, indent=2))
