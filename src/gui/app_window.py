@@ -39,7 +39,7 @@ class ApplicationWindow(Tk):
 		self.mainloop()
 
 	def center_window(self):
-		self.update_idletasks() # Why?
+		self.update_idletasks() # This makes the information required with winfo more acurate or something, read it in a doc somewhere ;).
 
 		# Get screen size
 		w = self.winfo_screenwidth()
