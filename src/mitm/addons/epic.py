@@ -1,5 +1,6 @@
 import json
-from typing import Union, Dict, List
+import re
+from typing import Union, Dict, List, TypedDict
 from urllib.parse import urlparse, parse_qs
 
 from mitmproxy.http import HTTPFlow, HTTPResponse
@@ -14,24 +15,61 @@ def get_epic_game(namespace: str) -> EpicGame:
 	return next((game for game in config.platforms['epic'] if game['namespace'] == namespace), None)
 
 
+class EpicEntitlement(TypedDict):
+	catalogItemId: str
+	consumable: bool
+	entitlementName: str
+	entitlementSource: str
+	entitlementType: str
+	grantDate: str
+	id: str
+	namespace: str
+	status: str
+	useCount: int
+
+
 class EpicAddon(BaseAddon):
 	api_host = r'api\.epicgames\.dev'
-	ecom_host = r'ecommerceintegration.+\.epicgames\.com'
+	ecom_host = r'ecommerceintegration.*\.epicgames\.com'
+	library_service_host = r'library-service\.live\..*\.on\.epicgames\.com'
 
 	hosts = BaseAddon.get_hosts([
-		api_host, ecom_host
+		api_host, ecom_host, library_service_host
 	])
 
 	@staticmethod
 	@log_exceptions
 	def request(flow: HTTPFlow):
 		EpicAddon.block_telemetry(flow)
+		EpicAddon.block_playtime(flow)
 
 	@staticmethod
 	@log_exceptions
 	def response(flow: HTTPFlow):
+		# log.debug(f'EpicAddon. Path: {flow.request.path}')
+		# EpicAddon.intercept_offers(flow)
 		EpicAddon.intercept_ownership(flow)
 		EpicAddon.intercept_entitlements(flow)
+
+	@staticmethod
+	def intercept_offers(flow: HTTPFlow):
+		"""No effect in intercepting this one I suppose"""
+		if BaseAddon.host_and_path_match(
+				flow,
+				host=EpicAddon.api_host,
+				path=r"^/epic/ecom/v1/identities/.+/namespaces/.+/offers"
+		):
+			log.info('Intercepted an Offers request from Epic Games')
+
+			response: dict = json.loads(flow.response.text)
+
+			elements: List[dict] = response['elements']
+			if elements is not None:
+				for element in elements:
+					if element['purchasedCount'] == 0:
+						element['purchasedCount=0'] = 1
+
+			EpicAddon.modify_response(flow, elements)
 
 	@staticmethod
 	def intercept_ownership(flow: HTTPFlow):
@@ -66,9 +104,11 @@ class EpicAddon(BaseAddon):
 	@staticmethod
 	def intercept_entitlements(flow: HTTPFlow):
 		if BaseAddon.host_and_path_match(
-				flow,
-				host=EpicAddon.ecom_host,
+				flow, host=EpicAddon.ecom_host,
 				path=r"^/ecommerceintegration/api/public/v2/identities/\w+/entitlements$"
+		) or BaseAddon.host_and_path_match(
+				flow, host=EpicAddon.api_host,
+				path=r"^/epic/ecom/v1/identities/\w+/entitlements"
 		):
 			log.info('Intercepted an Entitlements request from Epic Games')
 
@@ -88,7 +128,7 @@ class EpicAddon(BaseAddon):
 				)
 
 				# Get the game's entitlements
-				entitlements = game['entitlements'] if game is not None else []
+				entitlements = game['entitlements'] if game is not None and 'entitlements' in game else []
 
 				# Map the list of objects to the list of string
 				entitlementNames = [entitlement['id'] for entitlement in entitlements]
@@ -96,10 +136,10 @@ class EpicAddon(BaseAddon):
 			[log.debug(f'\t{sandbox_id}:{entitlement}') for entitlement in entitlementNames]
 
 			# Filter out blacklisted entitlements
-			blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None else []
+			blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None and 'blacklist' in game else []
 			entitlementNames = [e for e in entitlementNames if e not in blacklist]
 
-			result = [{
+			injected_entitlements: List[EpicEntitlement] = [{
 				'id': entitlementName,  # Not true, but irrelevant
 				'entitlementName': entitlementName,
 				'namespace': sandbox_id,
@@ -109,10 +149,16 @@ class EpicAddon(BaseAddon):
 				'consumable': False,
 				'status': "ACTIVE",
 				'useCount': 0,
-				'entitlementSource': "eos"
+				'entitlementSource': "LauncherWeb"
 			} for entitlementName in entitlementNames]
 
-			EpicAddon.modify_response(flow, result)
+			log.info(f'Injecting {len(injected_entitlements)} entitlements')
+
+			original_entitlements: List[EpicEntitlement] = json.loads(flow.response.text)
+
+			merged_entitlements = original_entitlements + injected_entitlements
+
+			EpicAddon.modify_response(flow, merged_entitlements)
 
 	@staticmethod
 	def modify_response(flow: HTTPFlow, content: Union[Dict, List]):
@@ -130,5 +176,33 @@ class EpicAddon(BaseAddon):
 	@staticmethod
 	def block_telemetry(flow: HTTPFlow):
 		if config.block_telemetry and flow.request.path.startswith('/telemetry'):
-			flow.response = HTTPResponse.make(500, 'No more spying')
-			log.debug('Blocked telemetry request from Epic Games')
+			flow.request.text = '{}'  # Just in case
+
+			flow.response = HTTPResponse.make(200, '{}')
+			flow.response.headers.add('Content-Type', 'application/json')
+			flow.response.headers.add('server', 'eos-gateway')
+			flow.response.headers.add('access-control-allow-origin', '*')
+			flow.response.headers.add('x-epic-correlation-id', '12345678-1234-1234-1234-123456789abc')
+
+			log.info('Blocked telemetry request from Epic Games')
+
+	@staticmethod
+	def block_playtime(flow: HTTPFlow):
+		if config.block_playtime and flow.request.path.startswith('/library/api/public/playtime/'):
+			original_playtime = json.loads(flow.request.text)
+			flow.request.text = '{}'  # Just in case
+
+			correlation_id = flow.request.headers.get('X-Epic-Correlation-ID')
+			if m := re.match(r"UE4-(\w+)", correlation_id):
+				device_id = m.group(1)
+			else:
+				device_id = '123456789abcdef01234567890abcdef'
+
+			flow.response = HTTPResponse.make(204)
+			flow.response.headers.add('x-epic-device-id', device_id)
+			flow.response.headers.add('x-epic-correlation-id', correlation_id)
+			flow.response.headers.add('x-envoy-upstream-service-time', '10')  # ?
+			flow.response.headers.add('server', 'istio-envoy')
+
+			log.info('Blocked playtime request from Epic Games')
+			log.debug(f'\n{json.dumps(original_playtime, indent=4)}')

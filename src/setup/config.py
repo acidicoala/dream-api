@@ -37,6 +37,7 @@ class Config(metaclass=Singleton):
 	log_level: str
 	start_minimized: bool
 	block_telemetry: bool
+	block_playtime: bool
 	use_webmaster: bool
 	delete_cert_on_exit: bool
 	platforms: Platforms
@@ -59,6 +60,7 @@ class Config(metaclass=Singleton):
 			'log_level',
 			'start_minimized',
 			'block_telemetry',
+			'block_playtime',
 			'use_webmaster',
 			'delete_cert_on_exit',
 			'platforms'
