@@ -1,6 +1,8 @@
 import json
+import struct
 from os.path import isfile
 from xml.etree import ElementTree
+from collections import namedtuple
 
 import requests
 from mitmproxy.http import HTTPResponse
@@ -14,8 +16,36 @@ from util.log import log
 from util.resource import get_data_path
 
 
+def xml2entitlements(xml_string):
+	tree = ElementTree.fromstring(xml_string)
+
+	entitlements = []
+	for entitlement in tree.findall('entitlement'):
+		entitlement_dict = {}
+		for element in entitlement:
+			entitlement_dict[element.tag] = element.text
+		entitlements.append(entitlement_dict)
+
+	return entitlements
+
+
+def entitlements2xml(entitlements):
+	XML_DECLARATION = b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+	root = ElementTree.Element('entitlements')
+
+	for ent in entitlements:
+		entitlement = ElementTree.SubElement(root, 'entitlement')
+		for key, value in ent.items():
+			ElementTree.SubElement(entitlement, key).text = str(value)
+
+	return XML_DECLARATION + ElementTree.tostring(root, encoding='utf-8')
+
+
+Client = namedtuple('Client', 'NAME PROCESS_NAME DLL_NAME FUNCTION_NAME')
+
+
 class OriginAddon(BaseAddon):
-	last_origin_pid = 0
+	last_client_pid = 0
 	injected_entitlements = []
 	api_host = r'api\d*\.origin\.com'
 	entitlements_path = get_data_path('origin-entitlements.json')
@@ -50,11 +80,15 @@ class OriginAddon(BaseAddon):
 
 			log.info('Intercepted an Entitlements request from Origin ')
 
+			xml_mode = 'application/xml' in flow.response.headers['content-type']
 			# Get legit user entitlements
-			try:
-				entitlements: List = json.loads(flow.response.text)['entitlements']
-			except KeyError:
-				entitlements = []
+			if xml_mode:
+				entitlements: List = xml2entitlements(flow.response.text)
+			else:
+				try:
+					entitlements: List = json.loads(flow.response.text)['entitlements']
+				except KeyError:
+					entitlements = []
 
 			# Inject our entitlements
 			entitlements.extend(self.injected_entitlements)
@@ -72,7 +106,10 @@ class OriginAddon(BaseAddon):
 			# Modify response
 			flow.response.status_code = 200
 			flow.response.reason = 'OK'
-			flow.response.text = json.dumps({'entitlements': entitlements})
+			if xml_mode:
+				flow.response.content = entitlements2xml(entitlements)
+			else:
+				flow.response.text = json.dumps({'entitlements': entitlements})
 
 			flow.response.headers.add('X-Origin-CurrentTime', '1609452000')
 			flow.response.headers.add('X-Origin-Signature', 'nonce')
@@ -176,49 +213,54 @@ class OriginAddon(BaseAddon):
 	# Credit to anadius for the idea
 	@synchronized_method
 	def patch_origin_client(self):
-		PROCESS_NAME = 'Origin.exe'
-		DLL_NAME = 'libeay32.dll'
-		FUNCTION_NAME = 'EVP_DigestVerifyFinal'
+		origin = Client('Origin', 'Origin.exe', 'libeay32.dll', 'EVP_DigestVerifyFinal')
+		eadesktop = Client('EA Desktop', 'EADesktop.exe', 'libcrypto-1_1-x64.dll', 'EVP_DigestVerifyFinal')
+
+		client = origin
 
 		try:
-			origin_process = Pymem(PROCESS_NAME)
+			client_process = Pymem(client.PROCESS_NAME)
 		except ProcessNotFound:
-			log.warning('Origin process not found. Patching aborted')
+			client = eadesktop
+			try:
+				client_process = Pymem(client.PROCESS_NAME)
+			except ProcessNotFound:
+				log.warning('Origin/EA Desktop process not found. Patching aborted')
+				return
+
+		if client_process.process_id == self.last_client_pid:
+			log.debug(f'{client.NAME} client is already patched')
 			return
 
-		if origin_process.process_id == self.last_origin_pid:
-			log.debug('Origin client is already patched')
-			return
-
-		log.info('Patching Origin client')
+		log.info(f'Patching {client.NAME} client')
 
 		try:
-			libeay32_module = next(m for m in origin_process.list_modules() if m.name.lower() == DLL_NAME)
+			dll_module = next(m for m in client_process.list_modules() if m.name.lower() == client.DLL_NAME)
 		except StopIteration:
-			log.error(f'{DLL_NAME} is not loaded. Patching aborted')
+			log.error(f'{client.DLL_NAME} is not loaded. Patching aborted')
 			return
 
 		# The rest should complete without issues in most cases.
 
 		# Get the Export Address Table symbols
 		# noinspection PyUnresolvedReferences
-		libeay32_dll_symbols = PE(libeay32_module.filename).DIRECTORY_ENTRY_EXPORT.symbols
+		dll_symbols = PE(dll_module.filename).DIRECTORY_ENTRY_EXPORT.symbols
 
 		# Get the symbol of the EVP_DigestVerifyFinal function
-		verify_func_symbol = next(s for s in libeay32_dll_symbols if s.name.decode('ascii') == FUNCTION_NAME)
+		verify_func_symbol = next(s for s in dll_symbols if s.name.decode('ascii') == client.FUNCTION_NAME)
 
 		# Calculate the final address in memory
-		verify_func_addr = libeay32_module.lpBaseOfDll + verify_func_symbol.address
+		verify_func_addr = dll_module.lpBaseOfDll + verify_func_symbol.address
 
 		# Instructions to patch. We return 1 to force successful response validation.
 		patch_instructions = bytes([
-			0xB8, 0x01, 0, 0, 0,  # mov eax, 0x1
-			0xC3, 0, 0, 0, 0  # ret
+			0x66, 0xB8, 0x01, 0,  # mov ax, 0x1
+			0xC3  # ret
 		])
-		origin_process.write_bytes(verify_func_addr, patch_instructions, len(patch_instructions))
+		client_process.write_bytes(verify_func_addr, patch_instructions, len(patch_instructions))
 
 		# Validate the written memory
-		read_instructions = origin_process.read_bytes(verify_func_addr, len(patch_instructions))
+		read_instructions = client_process.read_bytes(verify_func_addr, len(patch_instructions))
 
 		if read_instructions != patch_instructions:
 			log.error('Failed to patch the instruction memory')
@@ -226,5 +268,5 @@ class OriginAddon(BaseAddon):
 
 		# At this point we know that patching was successful
 
-		self.last_origin_pid = origin_process.process_id
-		log.info(f'Patching Origin was successful')
+		self.last_client_pid = client_process.process_id
+		log.info(f'Patching {client.NAME} was successful')
