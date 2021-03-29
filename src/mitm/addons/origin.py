@@ -254,23 +254,9 @@ class OriginAddon(BaseAddon):
 
 		# Instructions to patch. We return 1 to force successful response validation.
 		patch_instructions = bytes([
-			0xB8, 0x01, 0, 0, 0,  # mov eax, 0x1
-			0xC3, 0, 0, 0, 0  # ret
+			0x66, 0xB8, 0x01, 0,  # mov ax, 0x1
+			0xC3  # ret
 		])
-
-		# libcrypto-1_1-x64.dll from EA Desktop has JMP stubs
-		format_ = None
-		jump_type = client_process.read_bytes(verify_func_addr, 1)
-		if jump_type == b'\xEB':
-			format_ = '<b'
-		elif jump_type == b'\xE9':
-			format_ = '<i'
-		if format_ is not None:
-			verify_func_addr += 1
-			format_size = struct.calcsize(format_)
-			jump_offset, = struct.unpack(format_, client_process.read_bytes(verify_func_addr, format_size))
-			verify_func_addr += format_size + jump_offset
-
 		client_process.write_bytes(verify_func_addr, patch_instructions, len(patch_instructions))
 
 		# Validate the written memory
