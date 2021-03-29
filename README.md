@@ -10,7 +10,7 @@ are meant for application developers.
 ### Python
 
 DreamAPI is written in Python 3. The python interpreter is bundled in distributable files. To run the
-project locally, you would need at lease Python 3.8+
+project locally, you would need at least Python 3.8+
 
 ### mitmproxy
 

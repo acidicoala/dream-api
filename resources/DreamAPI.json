@@ -4,7 +4,7 @@
 	"log_level": "DEBUG",
 	"start_minimized": false,
 	"block_telemetry": true,
-	"block_playtime": false,
+	"block_playtime": true,
 	"use_webmaster": false,
 	"delete_cert_on_exit": false,
 	"platforms": {
