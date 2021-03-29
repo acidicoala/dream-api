@@ -21,7 +21,7 @@ def install_cert():
 
 	# Init dummy config to generate the certificate
 	ProxyConfig(Options())
-	crtPath = Path.home().joinpath('.mitmproxy', 'mitmproxy-ca-cert.cer')
+	crtPath = Path.home() / '.mitmproxy' / 'mitmproxy-ca-cert.cer'
 	log.debug(f'certificate path: "{crtPath}"')
 
 	if error_code := subprocess.call(f'certutil -addstore -user Root "{crtPath}"', shell=True):
