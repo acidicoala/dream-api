@@ -1,5 +1,4 @@
 import json
-import struct
 from os.path import isfile
 from xml.etree import ElementTree
 from collections import namedtuple
@@ -214,14 +213,14 @@ class OriginAddon(BaseAddon):
 	@synchronized_method
 	def patch_origin_client(self):
 		origin = Client('Origin', 'Origin.exe', 'libeay32.dll', 'EVP_DigestVerifyFinal')
-		eadesktop = Client('EA Desktop', 'EADesktop.exe', 'libcrypto-1_1-x64.dll', 'EVP_DigestVerifyFinal')
+		ea_desktop = Client('EA Desktop', 'EADesktop.exe', 'libcrypto-1_1-x64.dll', 'EVP_DigestVerifyFinal')
 
 		client = origin
 
 		try:
 			client_process = Pymem(client.PROCESS_NAME)
 		except ProcessNotFound:
-			client = eadesktop
+			client = ea_desktop
 			try:
 				client_process = Pymem(client.PROCESS_NAME)
 			except ProcessNotFound:
@@ -251,6 +250,8 @@ class OriginAddon(BaseAddon):
 
 		# Calculate the final address in memory
 		verify_func_addr = dll_module.lpBaseOfDll + verify_func_symbol.address
+
+		log.debug(f'{client.FUNCTION_NAME} address: {hex(verify_func_addr)}, offset: {hex(verify_func_symbol.address)}')
 
 		# Instructions to patch. We return 1 to force successful response validation.
 		patch_instructions = bytes([
