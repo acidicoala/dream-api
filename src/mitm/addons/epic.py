@@ -7,12 +7,16 @@ from mitmproxy.http import HTTPFlow, HTTPResponse
 
 from mitm.addons.base import BaseAddon
 from mitm.addons.base import log_exceptions
-from setup.config import config, EpicGame
+from setup.config import config, EpicGame, Entitlement
 from util.log import log
 
 
 def get_epic_game(namespace: str) -> EpicGame:
 	return next((game for game in config.platforms['epic'] if game['namespace'] == namespace), None)
+
+
+def get_epic_blacklist(game: EpicGame) -> List[Entitlement]:
+	return [dlc['id'] for dlc in game['blacklist']] if game is not None and 'blacklist' in game else []
 
 
 class EpicEntitlement(TypedDict):
@@ -89,8 +93,7 @@ class EpicAddon(BaseAddon):
 			def process_game(param: str):
 				namespace, itemID = param.split(':')
 				game = get_epic_game(namespace)
-				blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None else []
-				owned = True if game is None else itemID not in blacklist
+				owned = True if game is None else itemID not in get_epic_blacklist(game)
 				return {
 					'namespace': namespace,
 					'itemId': itemID,
@@ -136,8 +139,7 @@ class EpicAddon(BaseAddon):
 			[log.debug(f'\t{sandbox_id}:{entitlement}') for entitlement in entitlementNames]
 
 			# Filter out blacklisted entitlements
-			blacklist = [dlc['id'] for dlc in game['blacklist']] if game is not None and 'blacklist' in game else []
-			entitlementNames = [e for e in entitlementNames if e not in blacklist]
+			entitlementNames = [e for e in entitlementNames if e not in get_epic_blacklist(game)]
 
 			injected_entitlements: List[EpicEntitlement] = [{
 				'id': entitlementName,  # Not true, but irrelevant
