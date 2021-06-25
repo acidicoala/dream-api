@@ -12,7 +12,7 @@ from util.log import log
 # http://theorangeduck.com/page/synchronized-python
 def synchronized_method(method):
 	outer_lock = Lock()
-	lock_name = "__" + method.__name__ + "_lock" + "__"
+	lock_name = f'__{method.__name__}_lock__'
 
 	def sync_method(self, *args, **kws):
 		with outer_lock:

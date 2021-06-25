@@ -61,7 +61,8 @@ class EpicAddon(BaseAddon):
 		if BaseAddon.host_and_path_match(
 				flow,
 				host=EpicAddon.api_host,
-				path=r"^/epic/ecom/v1/identities/.+/namespaces/.+/offers"
+				path=r"^/epic/ecom/v1/identities/\w+/namespaces/\w+/offers"
+				# legacy path: r"^/ecommerceintegration/api/public/eos/identities/.+/namespaces/.+/offers"
 		):
 			log.info('Intercepted an Offers request from Epic Games')
 
@@ -77,32 +78,45 @@ class EpicAddon(BaseAddon):
 
 	@staticmethod
 	def intercept_ownership(flow: HTTPFlow):
+		param_string = None
+
 		if BaseAddon.host_and_path_match(
 				flow,
 				host=EpicAddon.api_host,
 				path=r"^/epic/ecom/v1/platforms/EPIC/identities/\w+/ownership$"
-		):
-			log.info('Intercepted an Ownership request from Epic Games')
+		):  # Current endpoint
+			param_string = 'nsCatalogItemId'
+		elif BaseAddon.host_and_path_match(
+				flow,
+				host=EpicAddon.ecom_host,
+				path=r"^/ecommerceintegration/api/public/platforms/EPIC/identities/\w+/ownership$"
+		):  # Legacy endpoint
+			param_string = 'nsItemId'
 
-			url = urlparse(flow.request.url)
-			params = parse_qs(url.query)['nsCatalogItemId']
+		if param_string is None:
+			return
 
-			# Each nsCatalogItemId is formatted as '{namespace}:{item_id}'
-			[log.debug(f'\t{param}') for param in params]
+		log.info('Intercepted an Ownership request from Epic Games')
 
-			def process_game(param: str):
-				namespace, itemID = param.split(':')
-				game = get_epic_game(namespace)
-				owned = True if game is None else itemID not in get_epic_blacklist(game)
-				return {
-					'namespace': namespace,
-					'itemId': itemID,
-					'owned': owned,
-				}
+		url = urlparse(flow.request.url)
+		params = parse_qs(url.query)[param_string]
 
-			result = [process_game(param) for param in params]
+		# Each nsCatalogItemId/nsItemId is formatted as '{namespace}:{item_id}'
+		[log.debug(f'\t{param}') for param in params]
 
-			EpicAddon.modify_response(flow, result)
+		def process_game(param: str):
+			namespace, itemID = param.split(':')
+			game = get_epic_game(namespace)
+			owned = True if game is None else itemID not in get_epic_blacklist(game)
+			return {
+				'namespace': namespace,
+				'itemId': itemID,
+				'owned': owned,
+			}
+
+		result = [process_game(param) for param in params]
+
+		EpicAddon.modify_response(flow, result)
 
 	@staticmethod
 	def intercept_entitlements(flow: HTTPFlow):
